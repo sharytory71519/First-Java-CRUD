@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        input, button {
+            padding: 6px;
+            margin: 5px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+            width: 70%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Student Management</h1>
+
+<h3>Add / Edit Student</h3>
+
+<form id="studentForm">
+    <input type="hidden" id="studentId">
+
+    <input type="text" id="name"
+           placeholder="Student Name" required>
+
+    <input type="email" id="email"
+           placeholder="Student Email" required>
+
+    <button type="submit">Save Student</button>
+    <button type="button" onclick="clearForm()">Clear</button>
+</form>
+
+<h3>Student List</h3>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody id="studentTable"></tbody>
+</table>
+
+<script>
+    const api = "/students";
+    let students = [];
+
+    async function loadStudents() {
+        try {
+            const response = await fetch(api);
+            if (!response.ok) throw new Error("Load failed");
+
+            students = await response.json();
+
+            const table = document.getElementById("studentTable");
+            table.innerHTML = "";
+
+            students.forEach(student => {
+                const row = document.createElement("tr");
+
+                const idCell = document.createElement("td");
+                idCell.textContent = student.id;
+
+                const nameCell = document.createElement("td");
+                nameCell.textContent = student.name;
+
+                const emailCell = document.createElement("td");
+                emailCell.textContent = student.email;
+
+                const actionsCell = document.createElement("td");
+
+                const editButton = document.createElement("button");
+                editButton.textContent = "Edit";
+                editButton.onclick = () => editStudent(student.id);
+
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Delete";
+                deleteButton.onclick = () => deleteStudent(student.id);
+
+                actionsCell.append(editButton, deleteButton);
+                row.append(idCell, nameCell, emailCell, actionsCell);
+                table.appendChild(row);
+            });
+        } catch (error) {
+            alert("Could not load students.");
+        }
+    }
+
+    document.getElementById("studentForm")
+        .addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const id = document.getElementById("studentId").value;
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+
+            const url = id ? `${api}/${id}` : api;
+            const method = id ? "PUT" : "POST";
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ name, email })
+                });
+
+                if (!response.ok) throw new Error("Save failed");
+
+                clearForm();
+                await loadStudents();
+            } catch (error) {
+                alert("Could not save student.");
+            }
+        });
+
+    function editStudent(id) {
+        const student = students.find(s => s.id === id);
+        if (!student) return;
+
+        document.getElementById("studentId").value = student.id;
+        document.getElementById("name").value = student.name;
+        document.getElementById("email").value = student.email;
+    }
+
+    async function deleteStudent(id) {
+        if (!confirm("Delete this student?")) return;
+
+        try {
+            const response = await fetch(`${api}/${id}`, {
+                method: "DELETE"
+            });
+
+            if (!response.ok) throw new Error("Delete failed");
+
+            await loadStudents();
+        } catch (error) {
+            alert("Could not delete student.");
+        }
+    }
+
+    function clearForm() {
+        document.getElementById("studentForm").reset();
+        document.getElementById("studentId").value = "";
+    }
+
+    loadStudents();
+</script>
+
+</body>
+</html>
