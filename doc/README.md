@@ -4,6 +4,6 @@
 - ![alt text](delete-student.jpg)
 - ![alt text](startup-console.jpg)
 - ![alt text](github-commits.jpg)
-- ![alt text](merged-pull-requests.jpg)
+- ![alt text](merged-pull-request.jpg)
 
 
